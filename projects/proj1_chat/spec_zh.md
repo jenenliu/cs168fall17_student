@@ -179,23 +179,17 @@ __你必须使用定义在 `utils.py` 中的错误信息常量. 如果你没有�
     
 现在假设服务器有一小段时间都没有发送消息, 但是当客户端调用了 `recv` 来等待服务器的消息并返回时, 用户输入了几个字符到标准输入中. 此时客户端应当读取标准输入并且发送消息到服务器 -- 但是此时客户端只能阻塞卡死在那里等待服务器发送消息过来! 我们可以用非阻塞socket来解决这个问题.
 
-To use non-blocking sockets, you'll need to use the `select` call in the `select` library.  For more about how to use `select` and a very relevant example, take a look at [this page](http://www.bogotobogo.com/python/python_network_programming_tcp_server_client_chat_server_chat_client_select.php).  While you are required to use non-blocking sockets for reading data and accepting connections, it's fine to use blocking sockets for sending messages (since the messages you're sending are short and you don't need to handle sending a large number of messages in quick succession, `send` and `sendall` should not block for long periods of time).
-
-## Submission Details
-
-You will be submitting your project on [okpy](http://okpy.org). When you visit the webpage, sign in using your preferred email from bCourses (Unless you have changed it, this should default to your Berkeley email). You should already be automatically registered as a student in the course. If this is not the case or you encounter any issues, please fill out this [form](https://goo.gl/forms/JdFQkp933jHH3kJm1).
-
-You can then upload your project files into the "Project 1" assignment by selecting the assignment and then selecting to create a new submission. You will not be receiving any feedback from the autograder until the project is over, but you can submit as many times as you want. By default, your most recent submission will be graded. If you don't want this behavior, you can select to have a previous one graded instead.
+如果想要使用非阻塞socket, 你需要调用 `select` 库里面的 `select` 函数. 更多的关于如何使用 `select` 以及一些例子, 可以参考一下 [这个网页](http://www.bogotobogo.com/python/python_network_programming_tcp_server_client_chat_server_chat_client_select.php).  当你在使用非阻塞socket来接收新的连接和数据时, 可以使用阻塞函数来发送消息 (因为这里你需要发送的信息很短并且短时间内不需要发送大量的消息, 此时 `send` 和 `sendall` 应当不会阻塞较长时间).
 
 ## FAQ
 
-##### What python libraries can I use?
+##### 我可以使用什么Python库?
 
-Our solution code imports select, socket, and sys.  You should not import any other python libraries without asking first on Piazza.
+我们的工程代码import了select, socket, 和 sys. 所以你应当不需要再import其他库
 
-##### How do I figure out the IP address to use to connect to my chat server?
+##### 我怎么才能知道我要连的服务器的地址信息?
 
-If you started a server locally, your client can access the server using "localhost" or 127.0.0.1.  These are special names / addresses that are always used to refer to the local machine.  localhost and 127.0.0.1 cannot be used if you're trying to connect to your server from a different machine, because if a different machine uses those addresses, they refer to the local interface on that machine.  If you'd like to access your chat server from another machine, you'll need to determine your machine's externally reachable IP address.  There are some websites that will do this (e.g., Google "What's my IP address"), or you can also do this by running the `ifconfig` command.  `ifconfig` will list all the local interfaces; e.g.:
+如果你在本地启动你的服务器, 则你的客户端可以使用 "localhost" 或者 127.0.0.1 来连接. 它们是用来表示本地连接的特殊的名字/地址. 如果你想连接到另外的机器，则localhost 和 127.0.0.1就没法作为连接的地址, 因为如果另外一个机器也用这个地址, 它们也指的是对于自己本地机器的程序开放. 如果你想连接到另外的机器, 你需要知道该机器对外开放的IP地址. 有些网站可以查得到 (比如, Google "What's my IP address"), 或者你可以通过 `ifconfig` 名利来查看.  `ifconfig` 将会列出所有的网络口信息; 比如:
 
     $ ifconfig
     lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> mtu 16384
