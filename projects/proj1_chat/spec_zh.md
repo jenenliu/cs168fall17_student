@@ -92,25 +92,26 @@ socket表示的是两个程序通过网络连接时它们所连接的点.  每�
 
 ## 第二部分
 
-In the remainder of the assignment, you'll build on your basic client and server to create a chat server with different channels that clients can communicate on.  For a demo of how your server should behave, watch the video [here](https://youtu.be/4btZs--wlpI).
+在接下来的作业中, 你将需要在你上面所写的代码基础上写一个支持多用户多群组聊天的服务器. 这里的 [演示视频](https://youtu.be/4btZs--wlpI)可以
+告诉你你的程序应当长什么样子
 
-### Server Functionality
+### 服务器功能
 
-The server should accept a single command line argument that's the port that the server should run on.
+服务器程序应该接受一个命令行参数，改参数表示服务器绑定在哪个端口上.
 
-#### Messages
+#### 消息
 
-Unlike your server in part 0, your server in this part of the assignment must allow many clients to be connected and sending messages concurrently.  Each client should have an associated name (so that other connected clients know who each message is from) and channel that they're currently subscribed to.  When a client first connects, it won't have an associated name and channel.  The first message that the server receives from the client should be used as the client's name.
+和你在第一部分的服务器不同, 这部分作业的服务器需要支持多个用户同时在线并且可以同时互发消息.  每个客户端应当有个对应的名字 (这样每个客户端才能知道他们在给谁发送消息) 并且需要知道该客户端在哪个群组里面. 当客户端第一次连上来时，不会有对应的名字和群组.  服务器接收到的第一个客户端的消息将作为客户端的名字.
 
-Future messages from the client to the server can take one of two forms.  The first type of message is a control message; control messages always begin with "/".  There are three different control messages your server should handle from clients:
+服务器从客户端接收的消息分为两种类型.  第一种类型的消息为命令控制消息; 命令控制消息始终以"/"开头.  有几种不同的控制消息需要服务器处理:
 
-- `/join <channel>` should add the client to the given channel.  Clients can only be in one channel at a time, so if the client is already in a channel, this command should remove the client from that channel. When a client is added to a channel, a message should be broadcasted to all existing members of the channel stating that the client has joined.  Similarly, if the client left a channel, a message should be broadcasted stating that the client left.
-- `/create <channel>` should create a new channel with the given name, and add the client to the given channel.  As with the `/join` call, the client should be removed from any existing channels.
-- `/list` should send a message back to the client with the names of all current channels, separated by newlines.
+- `/join <channel>` 命令应当添加发送该命令的客户端到此群组中. 客户端每次只能在一个群组中, 所以如果一个客户端已经加入了一个群组, 这个命令将会把客户端从该群组中移除. 当一个客户端加入某个群组时, 应当有一条消息广播给群里的每个人告诉他们此客户端加入群组.  同样的，当一个客户端离开群组时, 一条此客户端退出群组的消息应当广播给群组里的每个人.
+- `/create <channel>` 命令应当创建一个群组, 并且添加此客户端到该群组.  就像 `/join` 命令一样, 此时客户端应当从他已加入的群组中移除.
+- `/list` 命令应当发送一条消息给客户端当前已有的所有群组, 每个群组用换行符隔开.
 
-The second type of message is normal messages to the client's current channel.  All messages that are not preceeded by a `/` are considered normal messages.  These messages should be broadcasted to all other clients in the channel, preceeded by the client's name in brackets (see the example below).  Messages should _not_ be sent to client in different channels.  If the client is not currently in a channel, the server should send an error message back to the client.
+第二种类型的消息就是普通的群里聊天消息.  所有不是以 `/` 开头的消息都当做普通消息.  每次发送出去的消息应当广播给群组里的其他所有人, 消息开头应该是发消息的客户端的名字，用中括号括起来 (参考下面例子).  消息 _不应当_ 从一个群组发送到另外一个群组. 如果客户端不在某个群组里面，客户端发送消息时，服务器应该回复一个错误提醒消息.
 
-When a client disconnects, a message should be broadcasted to all members of the client's channel saying that the client disconnected.
+当一个客户端断开连接时, 一个客户端下线的消息应当广播给群里所有的人.
 
 ##### Delineating Messages
 
