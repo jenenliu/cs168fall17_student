@@ -113,43 +113,43 @@ socket表示的是两个程序通过网络连接时它们所连接的点.  每�
 
 当一个客户端断开连接时, 一个客户端下线的消息应当广播给群里所有的人.
 
-##### Delineating Messages
+##### 消息划界
 
-Sockets provide a data stream functionality, but they don't delineate different messages.  When a given `recv` call returns some data, the socket won't tell you whether the data returned is a single message, or multiple messages, or part of one message.  As a result, you'll need a way to determine when a message ends.  For this assignment, use fixed length messages that have 200 characters for all messages (including messages from the server to the client). If a message is shorter than 200 characters, you should pad the message with spaces (and the receiver should strip any spaces off of the end of the message). You can assume that no messages are longer than 200 characters.
+Socket提供了数据流功能, 但是它们不会区分不同的消息. 当 `recv` 函数调用后并返回数据时, socket不会告诉你接收到的数据是一条消息, 还是几条消息, 或者只是一部分消息. 所以你需要一个检测消息是否结束的方法. 对这个作业来说, 我们使用定长(200字节)来表示一个消息 (包括服务器发送到客户端的消息也是). 如果一个消息长度小于200字节, 则你需要在消息后面加上空格填充上 (而接收者在接收到消息后应当把最后面不需要的空格过滤掉). 你可以假设所有发送的消息都不会超过200个字节.
 
-Be sure that your code correctly handles the case where less than one message is available in the socket's buffer (so a `recv` call returns fewer than 200 characters of data) and the case where more than one message is available in the socket's buffer.  You should handle partial messages by buffering: if a `recv` call returns only part of a message, your code should hold on to the part of the message until the remainder of the mesage is received, and then handle the complete message.  For example, if a client receives 150 characters from the server, it should hold those 150 characters until 50 more characters are received.  The client should only write the message to stdout once all 200 characters have been received.  To help you check for your server's handling of these cases, we've provided a special client (`client_split_messages.py`) that splits messages into many smaller messages before sending them to the server.  This client only tests some of the scenarios your server should handle!  You'll likely want to modify this client to test for additional cases.
+请确保你的代码能正确的处理一些小于200字节的消息 (此时 `recv` 会返回小于200字节的数据) 并且能够处理当有多条消息存在缓存里的情况. 你应当能够通过缓存来处理不完整的消息: 如果一个 `recv` 函数只返回一部分消息, 你的代码应当能够保存这些数据并且等待另一部分消息到来, 然后处理一整条消息. 比如, 如果一个客户端从服务器接收到150个字节, 你的代码应当保存这150个字节并且等待另外50个字节发送过来. 客户端应当在收到一整个消息也就是200个字节的时候才将消息输出到标准输出中.  为了帮助你检查你的服务器能否处理这种情况, 我们提供了一个特别的客户端 (`client_split_messages.py`) 此客户端会在发送消息到服务器之前切割一整条消息. 注意这个客户端只检查了一小部分服务器应当处理的场景! 你应该修改这个客户端代码来测试更多的场景.
 
-#### Error Handling
+#### 错误处理
 
-Your server should handle cases where the client sends an invalid message by returning an appropriate error message to the client.  For example, if a client uses the `/join` command but doesn't provide the name of a channel to join, the server should send back an error message.  The provided `utils.py` includes format strings for all of the errors you should handle.  You can use these format strings using Python's string formatting operations.  For example, `utils.py` defines the following error message:
+你的服务器应当能处理一些客户端乱发消息的情况，当客户端乱发消息时回复错误消息给客户端. 比如, 如果客户端发送了 `/join` 但却没有发送它想加入的群组名字, 服务器此时应当回复客户端一个错误消息. 我们提供的 `utils.py` 包括了所有你应当处理的错误场景的错误消息. 你可以通过Python的格式化语句来格式化错误消息. 举个例子, `utils.py` 定义了一下错误消息:
 
     CLIENT_SERVER_DISCONNECTED = "Server at {0}:{1} has disconnected"
     
-You can use the `.format` function to replace the brackets with strings as follows:
+此时你可以使用 `.format` 函数来格式化使用IP地址和端口号来替换上面的 `{0}` 和 `{1}`:
 
     error_message = CLIENT_SERVER_DISCONNECTED.format("localhost", 12345)
 
-__You are required to use the error messages defined as constants in `utils.py`.  If you do not use the constants defined in `utils.py` , you will not get credit for error handling.__
+__你必须使用定义在 `utils.py` 中的错误信息常量. 如果你没有使用 `utils.py` 中的错误信息常量, 错误信息处理部分将没有分数.__
 
-When commands lead to an error, the command should not cause any changes at the server.  For example, if a client is currently in the `cs168_tas` channel and then tries to join a channel that doesn't exist, the client should __not__ be removed from the `cs168_tas` channel.
+当一个客户端发送的命令导致了某些错误, 则此命令不应当对服务器有任何的改变. 举个例子, 如果一个客户端此时在 `cs168_tas` 群里并且向加入一个不存在的群组, 则服务器 __不应当__ 将客户端从 `cs168_tas` 群组中移除.
 
-We will only test for errors that have associated error messages in `utils.py` in our testing.  You're welcome to check for additional errors if you'd like, but you will not be graded on them.
+我们只会测试包括在 `utils.py` 中的错误类型. 你应当自己考虑更多的场景并且自己测试这些场景.
 
-### Client Functionality
+### 客户端功能
 
-Each client connects to a particular chat server, and is associated with a name.  Your client should be started as follows:
+每个客户端会连接到一个特定的服务器, 并且会有对应的名字.  你的客户端应该按照下面的命令行启动:
 
     $ python client.py Scott 127.0.0.1 55555
     
-This command should connect to the server at the given address and port number, and then send a message with the name Scott.
+这个命令应当让客户端连接到对应的IP地址和端口的服务器中, 并且发送Scott这条消息给服务器来从而来设置自己的名字.
 
-After being started, the client should listen for messages from the server and from stdin.  Messages from the server should be printed to the command line (after being stripped of any spaces at the end) and messages from stdin should be sent to the server (after being padded with spaces, as needed).  The client code should print [Me] before each message sent by that particular client so that the client can differentiate its own messages from messages sent by others.  When the client gets a message from the server, it should write over the `[Me]` with the message from the server.  For an example of this, take a look at the demo video linked above.
+当客户端成功启动后, 客户端应当同时监听来自服务器和标准输入的消息.  服务器发送过来的消息应当输出在终端上 (记得去掉加在最后面的多余的空格)而从标准输入过来的消息应当发送到服务器 (在添加了必要的空格只有).  客户端应当在发送每个消息前输出[Me]用来区分自己发出去的消息和接收到的别人的消息.  当一个客户端从服务器接收到消息时, 新的消息应当输出在 `[Me]` 消息后面. 具体的例子可以看一下上面的示例视频.
 
-Here's an example of a client's interaction with a server that was started locally on port 55555:
+以下是一个客户端连接到本地55555端口的服务器的一个交互示例:
 
 	python client.py Panda localhost 55555
 	[Me] Hello world!
-	Not currently in any channel. Must join a channel before sending messages.
+	Not currently in any channel. Must join a channel before sending messages.  // 意思是：当前不在任何频道，必须加入某个频道才能发送消息
 	[Me] /list
 	[Me] /create 168_tas
 	[Me] /list
@@ -158,7 +158,7 @@ Here's an example of a client's interaction with a server that was started local
 	Alice has joined
 	[Alice] Hi everyone! Does anyone know what we're doing on the first day of lecture?
 	
-After seeing Alice's message, Panda stopped his client. After Panda created the 168_tas channel, a second client started:
+当看到Alice的消息以后, Panda 关闭了它的客户端. 当Panda创建了168_tas频道以后, 启动了另一个客户端:
 
 	python client.py Alice 127.0.0.1 55555
 	[Me] /list
@@ -167,17 +167,17 @@ After seeing Alice's message, Panda stopped his client. After Panda created the 
 	[Me] Hi everyone! Does anyone know what we're doing on the first day of lecture?
 	Panda has left
 
-### Details
+### 细节
 
-We've provided a `utils.py` file that has error messages that you should use.  These are intended to make your life easier, and also to enable testing.  Be sure you use these messages; otherwise, your code will fail the tests!
+我们已经提供了 `utils.py` 定义了所有你应当使用的错误消息. 这些只是为了让你代码写起来方便一点, 并且能让我们做一些测试. 请确保你使用了这些错误消息; 否则, 你的代码将不会通过测试!
 
-### Non-blocking sockets
+### 非阻塞型socket
 
-You'll need to use non-blocking sockets for this part of the assignment, because both your client and server need to receive data from multiple sources, in an unknown order.  Consider what would happen if your client used blocking sockets, as in part 0, with a call like:
+这部分的作业你将需要使用非阻塞socket, 因为你的客户端和服务器都需要从不同的地方接收信息, 并且消息顺序也是不确定的. 想象一下如果想第一部分一样使用阻塞socket的话以下的调用场景会发生什么, 我们像如下代码一样调用客户端接收消息:
 
     message_from_server = client_socket.recv(200)
     
-Now suppose that the server doesn't send any messages for a while, but while the client is blocked waiting on the `recv` call to return, the user types some data into stdin.  The client should read the data from stdin and send it to the server -- but the client is stuck blocked waiting on data from the server socket!  To address this problem, you can use non-blocking sockets.
+现在假设服务器有一小段时间都没有发送消息, 但是当客户端调用了 `recv` 来等待服务器的消息并返回时, 用户输入了几个字符到标准输入中. 此时客户端应当读取标准输入并且发送消息到服务器 -- 但是此时客户端只能阻塞卡死在那里等待服务器发送消息过来! 我们可以用非阻塞socket来解决这个问题.
 
 To use non-blocking sockets, you'll need to use the `select` call in the `select` library.  For more about how to use `select` and a very relevant example, take a look at [this page](http://www.bogotobogo.com/python/python_network_programming_tcp_server_client_chat_server_chat_client_select.php).  While you are required to use non-blocking sockets for reading data and accepting connections, it's fine to use blocking sockets for sending messages (since the messages you're sending are short and you don't need to handle sending a large number of messages in quick succession, `send` and `sendall` should not block for long periods of time).
 
