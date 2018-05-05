@@ -211,56 +211,52 @@ __你必须使用定义在 `utils.py` 中的错误信息常量. 如果你没有�
 		media: autoselect <full-duplex>
 		status: inactive
 		
-The first entry above is the loopback address, which can be used to access the machine locally.  You'll notice the IP address of this interface (listed after `inet`) is always `127.0.0.1`.  Look for an interface listed with an IP address that's different than the loopback one -- in this example, the externally reachable IP address is `127.19.131.124` (listed under `en0`).
+上面所列的第一部分是回环地址, 此地址只能用来给机器内部的程序访问. 你会注意到这个网口的IP地址(写在 `inet`后面)一直都是 `127.0.0.1`.  看一下另外一个IP地址和回环地址不一样的网口 -- 可以发现, 有个对外IP地址是 `127.19.131.124` (也就是在 `en0` 那一列的信息).
 
-If you're behind a [NAT](http://en.wikipedia.org/wiki/Network_address_translation), you won't be able to reach your server from different machines.  We'll learn more about NATs later this semester.  In the meantime, if you'd like to play around with using your server from remote machines, try running it while connected to the wifi in Soda hall, which doesn't use a NAT, and assigns users unique IP addresses.
+如果你的网口是在 [NAT](http://en.wikipedia.org/wiki/Network_address_translation) 后面, 其他机器将无法访问你的服务器地址. 本学期的后面我们将会学习NAT. 此项目完成时，你可以通过不同的机器连接上你的服务器进行聊天, 可以试着在WiFi下连接你的客户端, 此时不会使用NAT, 保证了每个客户端有唯一的IP地址.
 
-##### What's a good port number to pass in?
+##### 用什么样的端口给服务器比较好?
 
-Many low port numbers are reserved; try using a port number greater than 10000.
+很多小的端口都被系统使用了; 尽量使用大于1000的端口号.
 
-##### When I start the server, I get an error that says `Address already in use`
+##### 当我启动我的服务器时，收到这样的错误消息 `Address already in use`
 
-This error means that another process is currently using the port.  Sometimes this happens transiently -- for example, if your server exited with an error, and not all of the sockets it was using have been cleaned up by the operating system yet.  When this happens, try using a different port.
+这个错误信息表示有其他程序正在使用你想使用的端口. 有时候这种情况会暂时出现 -- 比如, 如果你的服务器因为一些错误意外退出了, 此时服务器所使用的所有socket还没有被操作系统全部清除掉的时候.  所以当这种消息出现时，可以试着使用另外一个端口.
 
-##### What maximum number of connections should I use in the `listen` call?
+##### 当我调用 `listen` 函数的时候应该使用多大的连接数来给它做参数?
 
-5 is fine for this assignment.
+对于此次作业来讲，5就够了
 
-##### Using a fixed-length message seems clunky and wasteful.  What are some alternatives?
+##### 使用定长消息显得很笨重而且会造成内存浪费. 有其他解决办法吗?
 
-For this assignment, you must use fixed-length messages.  If you're curious about what's used in practice, there are two common approaches.  The first is to use a delimiter between messages (e.g., some unique sequence of characters that's unlikely to be seen in any messages, such as `:==`) that can be used to determine when a message has ended.  The second (and more common) option is for the first thing in any message to be the size of the message.
+对于这次作业来说，你必须使用定长消息. 如果你对于实际程序中的处理办法很感兴趣，这里有两种解决办法. 第一种是在消息与消息之间设置分隔符 (比如, 可以利用一些不可能在消息中出现的字符串来分隔不同的消息, 比如像 `:==`) 此时就可以利用它来确定一个消息是否结束.  第二种 (也是更常用的) 的解决办法就是在数据的第一个位置写入数据的大小.
 
-##### How can I write over the "[Me]" on stdout when I get a message from the server?
+##### 当我从服务器接收到新的消息的时候, 怎样才能在终端上输出新的消息，覆盖过 "[Me]", 使它在我的上一行?
 
-You can start writing at the beginning of the current line of stdout by using "\r" at the beginning of the message you output.  One thing to be careful about is messages from the server that are shorter than the length of the "[Me]" string. For example, suppose the client sends the `/list` command to the server, and one of the channels is named "A".   The output should look like:
+你可以在输出的时候，给你的消息前面加个 "\r" 字符.  只是有个需要注意的是当你从服务器收到的字符长度小于 "[Me]" 字符串的时候. 比如, 当客户端发送了 `/list` 命令到服务器, 然后其中有个群组名字叫 "A". 输出将会是像下面这样子的:
 
     [Me] /list
     A
 
-But if you're not careful, you'll end up with output that looks like:
+但是如果你不注意的话，输出可能会变成下面这个样子:
 
     [Me] /list
     AMe]
     
-Use `utils.CLIENT_WIPE_ME` to fix this issue (note that if you use this constant, you'll need a "\r" at the beginning of the next string printed to avoid extra whitespace).
+你可以使用 `utils.CLIENT_WIPE_ME` 来解决这个问题 (需要注意的是如果你使用了这个常量, 你将需要把 "\r" 放在下一行字符串的前面，以避免输出多余的空格).
 
-##### Do I ever need to close the server socket?
+##### 我需要自己关闭服务器socket吗?
 
-No. It's fine if your server code is inside of a `while True:` loop, like the server in Part 0.
+不需要. 如果你的服务器代码是在 `while True:` 循环了里面的话, 就像第一部分的服务器代码一样.
 
-##### Should the client quit if the server disconnects?
+##### 当服务器断开的时候，客户端需要退出吗?
 
-Yes.  The client should quit and print the appropriate error message from `utils.py`.
+是的，并且客户端需要打印在 `utils.py` 中的关于服务器断开的错误信息.
 
-##### How will our code be tested?
-
-We'll do end-to-end tests using your client and server together, and we'll also do tests where we use our own client to interact with your server (and vice versa).  As a result, you should make sure that your client and server communicate as described in this document.
-
- ##### I'm running Windows and select isn't working.
+##### 我是用的饿是Windows然后发现select不起作用?.
   
-Unfortunately, stdin does not count as a socket in Windows due to how file descriptors work differently. Since the tests will be run on a Linux machine, this will cause issues if you write the code to use the Windows version of file descriptors. Your options are to download a Linux virtual machine, or use the instructional servers through SSH, or use the lab machines to test your code. Side note: If you are using Windows 10, you can use the Linux subsystem for Windows and run your code from there and it may work.
+不幸的是, 因为文件描述符的实现方式不一样，在Windows中标准输入并不会被当做一个socket. 所有的测试都会在Linux系统下进行, 所以如果你的代码是在Windows的文件描述符下面实现的，那么会造成不必要的错误. 
 
-### Acknowledgments
+### 感谢
 
-This assignment was inspired by the [Introduction to Socket Programming Assignment](http://www.cs.princeton.edu/courses/archive/spr15/cos461/assignments/0-sockets.html) in Princeton's Computer Networking course.
+此次作业的灵感来自于普林斯顿大学的计算机网络课程的 [socket编程作业](HTTP://www.cs.princeton.edu/courses/archive/spr15/cos461/assignments/0-sockets.html). 
